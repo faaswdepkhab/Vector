@@ -237,6 +237,9 @@ public:
     }
     
     void PopBack() {
+        if (size_ == 0) {
+            return;
+        }
         std::destroy_n(data_ + size_ - 1, 1);
         --size_;
     }
@@ -258,12 +261,14 @@ public:
     
     template <typename... Args>
     iterator Emplace(const_iterator pos, Args&&... args) {
+        size_t index = pos - begin();
+        assert(index <= size_);
+    
         if (pos == end()) {
             EmplaceBack(std::forward<Args>(args)...);
             return begin() + size_ - 1;
         }
         
-        size_t index = pos - begin();
         if (size_ < Capacity()) {
             T t = T(std::forward<Args>(args)...);
             std::uninitialized_move_n(end() - 1, 1, end());
@@ -290,10 +295,8 @@ public:
     }
    
     iterator Erase(const_iterator pos) {
-        if (size_ == 0) {
-            return begin();
-        }
         size_t index = pos - begin();
+        assert(index < size_);
         std::move(begin() + index + 1, end(), begin() + index);
         std::destroy_n(end() - 1, 1);
         --size_;
